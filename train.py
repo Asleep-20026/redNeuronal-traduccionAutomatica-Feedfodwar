@@ -2,54 +2,20 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 from model import WordProcessorModel
-from data_processing import cargar_datos
-
-class Trainer:
-    def __init__(self, model, criterion, optimizer, data_path, num_epochs=10):
-        self.model = model
-        self.criterion = criterion
-        self.optimizer = optimizer
-        self.data_indices, _, _ = cargar_datos(data_path)
-        self.num_epochs = num_epochs
-
-    def train(self):
-        for epoch in range(self.num_epochs):
-            total_loss = 0
-
-            for input_indices, target_indices in self.data_indices:
-                input_tensor = torch.tensor([int(idx) if idx.isdigit() else 0 for idx in input_indices], dtype=torch.long)
-                target_tensor = torch.tensor([int(idx) if idx.isdigit() else 0 for idx in target_indices], dtype=torch.long)
-
-                self.optimizer.zero_grad()
-
-                _, (encoder_outputs, _) = self.model.lstm(self.model.embedding(input_tensor.unsqueeze(1)))
-                output = self.model(input_tensor.unsqueeze(1), encoder_outputs)
-
-                input_len = input_tensor.size(0)
-                target_len = target_tensor.size(0)
-
-                if input_len < target_len:
-                    target_tensor = target_tensor[:input_len]
-                elif input_len > target_len:
-                    padding = torch.zeros(input_len - target_len, dtype=torch.long)
-                    target_tensor = torch.cat((target_tensor, padding))
-
-                loss = self.criterion(output.view(-1, self.model.output_size), target_tensor.view(-1))
-
-                loss.backward()
-                self.optimizer.step()
-
-                total_loss += loss.item()
-
-            print(f'Epoch {epoch + 1}/{self.num_epochs}, Loss: {total_loss / len(self.data_indices)}')
-
-        torch.save(self.model.state_dict(), 'trained_model.pth')
+from data_processing import DataLoader
 
 # Parámetros de entrenamiento
-vocab_size = 10000
+vocab_size = 10000  # Ajusta según tu vocabulario
 embedding_size = 200
 hidden_size = 200
-output_size = 10000
+output_size = 10000  # Ajusta según tus necesidades de salida
+
+# Crear instancia de DataLoader
+data_loader = DataLoader(file_path="./dataTrain.json")
+
+# Cargar datos de entrenamiento
+data_loader.build_vocabularies()
+datos, word_to_index_es, index_to_word_en = data_loader.get_data_and_vocabularies()
 
 # Crear modelo
 model = WordProcessorModel(vocab_size, embedding_size, hidden_size, output_size)
@@ -58,8 +24,51 @@ model = WordProcessorModel(vocab_size, embedding_size, hidden_size, output_size)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# Crear instancia de Trainer
-trainer = Trainer(model, criterion, optimizer, dataTrain, num_epochs=10)
+# Número de épocas (iteraciones completas sobre los datos de entrenamiento)
+num_epochs = 10
 
-# Entrenar el modelo
-trainer.train()
+# Bucle de entrenamiento
+for epoch in range(num_epochs):
+    total_loss = 0
+
+    # Iterar sobre los pares de oraciones (entrada, salida)
+    for input_indices, target_indices in datos:
+        # Crear tensores de entrada y salida
+        input_tensor = torch.tensor([word_to_index_es.get(idx, 0) for idx in input_indices], dtype=torch.long)
+        target_tensor = torch.tensor([word_to_index_es.get(idx, 0) for idx in target_indices], dtype=torch.long)
+
+        # Resetear gradientes
+        optimizer.zero_grad()
+
+        # Proporcionar la salida de la capa LSTM como encoder_outputs
+        _, (encoder_outputs, _) = model.lstm(model.embedding(input_tensor.unsqueeze(1)))
+
+        # Realizar forward pass
+        output = model(input_tensor.unsqueeze(1), encoder_outputs)
+
+        # Determinar la longitud de las secuencias de entrada y salida
+        input_len = input_tensor.size(0)
+        target_len = target_tensor.size(0)
+
+        # Truncar o rellenar la salida y los objetivos
+        if input_len < target_len:
+            target_tensor = target_tensor[:input_len]
+        elif input_len > target_len:
+            padding = torch.zeros(input_len - target_len, dtype=torch.long)
+            target_tensor = torch.cat((target_tensor, padding))
+
+        # Calcular pérdida
+        loss = criterion(output.view(-1, output_size), target_tensor.view(-1))
+
+        # Realizar backward pass y optimización
+        loss.backward()
+        optimizer.step()
+
+        # Acumular la pérdida total
+        total_loss += loss.item()
+
+    # Imprimir la pérdida promedio en cada época
+    print(f'Época {epoch + 1}/{num_epochs}, Pérdida: {total_loss / len(datos)}')
+
+# Guardar los pesos entrenados del modelo
+torch.save(model.state_dict(), 'modelo_entrenado.pth')
