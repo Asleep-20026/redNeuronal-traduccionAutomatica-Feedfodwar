@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # redNeuronal-traduccionAutomatica-Feedfodwar
 ```
 redNeuronal-traduccionAutomatica-Feedfodwar
@@ -13,4 +14,3 @@ redNeuronal-traduccionAutomatica-Feedfodwar
 ├─ modelo_entrenado.pth
 └─ train.py
 
-```
