@@ -1,63 +1,46 @@
-
-# train.py
 import torch
 import torch.optim as optim
 import torch.nn as nn
 from model import WordProcessorModel
-from data_processing import cargar_datos, tokenizar_oracion
+from data_processing import DataLoader
 
-def train_model(model, datos_indices, num_epochs=10, learning_rate=0.001, output_size=10000):
-    # Definir función de pérdida y optimizador
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+class Trainer:
+    def train_model(model, index_data, num_epochs=10, learning_rate=0.001, output_size=10000):
+        # Definir función de pérdida y optimizador
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-    for epoch in range(num_epochs):
-        total_loss = 0
+        for epoch in range(num_epochs):
+            total_loss = 0
 
-        # Iterar sobre los pares de oraciones (entrada, salida)
-        for input_indices, target_indices in datos_indices:
-            # Crear tensores de entrada y salida
-            input_tensor = torch.tensor(input_indices, dtype=torch.long)
-            target_tensor = torch.tensor(target_indices, dtype=torch.long)
+            # Iterar sobre los pares de oraciones (entrada, salida)
+            for input_indices, target_indices in index_data:
+                input_tensor = torch.tensor(input_indices, dtype=torch.long)
+                target_tensor = torch.tensor(target_indices, dtype=torch.long)
+                optimizer.zero_grad()
+                output = model(input_tensor.unsqueeze(1))  
+                output = output.view(-1, output_size)[:target_tensor.size(0), :]
+                loss = criterion(output, target_tensor.view(-1)[:output.size(0)])
+                loss.backward()
+                optimizer.step()
+                total_loss += loss.item()
+                
+            print(f'Época {epoch + 1}/{num_epochs}, Pérdida: {total_loss / len(index_data)}')
+            torch.save(model.state_dict(), '/mnt/c/workspace/redNeuronal-traduccionAutomatica-Feedfodwar/saved_models/model_trained.pth')
 
-            # Resetear gradientes
-            optimizer.zero_grad()
+            # Verificar si la pérdida es igual a 0 y detener el entrenamiento
+            if total_loss == 0.0:
+                print("La pérdida alcanzó 0.0. Deteniendo el entrenamiento.")
+                break
 
-            # Realizar forward pass
-            output = model(input_tensor.unsqueeze(1))  # Agregar dimensión de secuencia (batch_size=1)
+    # Parámetros de entrenamiento
+    vocab_size = 10000  
+    embedding_size = 200
+    hidden_size = 200
+    output_size = 10000  
 
-            # Ajustar las dimensiones de la salida
-            output = output.view(-1, output_size)[:target_tensor.size(0), :]
-
-            # Calcular pérdida
-            loss = criterion(output, target_tensor.view(-1)[:output.size(0)])
-
-            # Realizar backward pass y optimización
-            loss.backward()
-            optimizer.step()
-
-            # Acumular la pérdida total
-            total_loss += loss.item()
-
-        # Imprimir la pérdida promedio en cada época
-        print(f'Época {epoch + 1}/{num_epochs}, Pérdida: {total_loss / len(datos_indices)}')
-        torch.save(model.state_dict(), 'modelo_entrenado.pth')
-
-
-# Parámetros de entrenamiento
-vocab_size = 10000  
-embedding_size = 200
-hidden_size = 200
-output_size = 10000  
-
-# Crear modelo
-model = WordProcessorModel(vocab_size, embedding_size, hidden_size, output_size)
-
-# Ruta del archivo de datos
-dataTrain = "/mnt/c/workspace/redNeuronal-traduccionAutomatica-Feedfodwar/data/dataTrain.json"
-
-# Cargar datos de entrenamiento
-datos_indices, _, _ = cargar_datos(dataTrain)
-
-# Entrenar el modelo
-train_model(model, datos_indices, output_size)
+    # Crear modelo
+    model = WordProcessorModel(vocab_size, embedding_size, hidden_size, output_size)
+    dataTrain = "/mnt/c/workspace/redNeuronal-traduccionAutomatica-Feedfodwar/data/dataTrain.json"
+    index_data, _, _ = DataLoader.load_data(dataTrain)
+    train_model(model, index_data, output_size)
