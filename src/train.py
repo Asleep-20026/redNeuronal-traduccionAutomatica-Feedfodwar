@@ -1,5 +1,6 @@
 import torch
 import torch.optim as optim
+import os
 import torch.nn as nn
 from model import WordProcessorModel
 from data_processing import DataLoader
@@ -9,10 +10,12 @@ class Trainer:
         # Definir función de pérdida y optimizador
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-
+        # Construir la ruta del archivo dataTrain.json
+        
         for epoch in range(num_epochs):
             total_loss = 0
-
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            model_path = os.path.join(script_dir, '..', 'saved_models', 'model_trained.pth')
             # Iterar sobre los pares de oraciones (entrada, salida)
             for input_indices, target_indices in index_data:
                 input_tensor = torch.tensor(input_indices, dtype=torch.long)
@@ -26,7 +29,7 @@ class Trainer:
                 total_loss += loss.item()
                 
             print(f'Época {epoch + 1}/{num_epochs}, Pérdida: {total_loss / len(index_data)}')
-            torch.save(model.state_dict(), '/mnt/c/workspace/redNeuronal-traduccionAutomatica-Feedfodwar/saved_models/model_trained.pth')
+            torch.save(model.state_dict(), model_path)
 
             # Verificar si la pérdida es igual a 0 y detener el entrenamiento
             if total_loss == 0.0:
@@ -41,6 +44,7 @@ class Trainer:
 
     # Crear modelo
     model = WordProcessorModel(vocab_size, embedding_size, hidden_size, output_size)
-    dataTrain = "/mnt/c/workspace/redNeuronal-traduccionAutomatica-Feedfodwar/data/dataTrain.json"
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    dataTrain = os.path.join(script_dir, '..','data', 'dataTrain.json')
     index_data, _, _ = DataLoader.load_data(dataTrain)
     train_model(model, index_data, output_size)

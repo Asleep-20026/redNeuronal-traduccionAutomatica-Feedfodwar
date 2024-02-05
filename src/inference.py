@@ -1,6 +1,7 @@
 import torch
 from model import WordProcessorModel  
 from data_processing import DataLoader
+from train import *
 
 class Translator:
     # Definir variables necesarias
@@ -10,7 +11,7 @@ class Translator:
     output_size = 10000  
 
     model = WordProcessorModel(vocab_size, embedding_size, hidden_size, output_size)
-    model.load_state_dict(torch.load('/mnt/c/workspace/redNeuronal-translationAutomatica-Feedfodwar/saved_models/model_trained.pth'))
+    model.load_state_dict(torch.load(Trainer.model_path))
     model.eval()
 
     dataTrain = "/mnt/c/workspace/redNeuronal-translationAutomatica-Feedfodwar/data/dataTrain.json" 
