@@ -29,10 +29,3 @@ class Translator:
             print(f"Traducción: {translation}")
 
         return translation, output
-
-# Ejemplo de uso
-new_sentence = "Camarón que se duerme, se lo lleva la corriente?"
-translation, output = Translator.translate_sentence(new_sentence, Translator.model, Translator.word_to_index_es)
-print(f"Oración original: {new_sentence}")
-print(f"Traducción (índices): {translation}")
-print(f"Salida del modelo: {output}")   

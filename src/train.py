@@ -7,6 +7,13 @@ from data_processing import DataLoader
 
 class Trainer:
     def train_model(model, index_data, num_epochs=10, learning_rate=0.001, output_size=10000):
+        
+        # Verificar si hay una GPU disponible
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        
+        # Mover el modelo a la GPU si está disponible
+        model = model.to(device)
+        
         # Definir función de pérdida y optimizador
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
@@ -35,16 +42,3 @@ class Trainer:
             if total_loss == 0.0:
                 print("La pérdida alcanzó 0.0. Deteniendo el entrenamiento.")
                 break
-
-    # Parámetros de entrenamiento
-    vocab_size = 10000  
-    embedding_size = 200
-    hidden_size = 200
-    output_size = 10000  
-
-    # Crear modelo
-    model = WordProcessorModel(vocab_size, embedding_size, hidden_size, output_size)
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    dataTrain = os.path.join(script_dir, '..','data', 'dataTrain.json')
-    index_data, _, _ = DataLoader.load_data(dataTrain)
-    train_model(model, index_data, output_size)
