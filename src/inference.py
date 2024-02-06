@@ -14,8 +14,7 @@ class Translator:
     model.load_state_dict(torch.load(Trainer.model_path))
     model.eval()
 
-    dataTrain = "/mnt/c/workspace/redNeuronal-translationAutomatica-Feedfodwar/data/dataTrain.json" 
-    index_data, word_to_index_es, _ = DataLoader.load_data(dataTrain)
+    DataLoader.index_data, word_to_index_es, _ = DataLoader.load_data(Trainer.dataTrain)
 
     def translate_sentence(oracion, model, word_to_index_es):
         with torch.no_grad():

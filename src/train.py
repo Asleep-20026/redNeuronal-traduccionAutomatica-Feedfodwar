@@ -13,16 +13,15 @@ class Trainer:
         
         # Mover el modelo a la GPU si está disponible
         model = model.to(device)
-        
         # Definir función de pérdida y optimizador
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
         # Construir la ruta del archivo dataTrain.json
-        
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(script_dir, '..', 'saved_models', 'model_trained.pth')
         for epoch in range(num_epochs):
             total_loss = 0
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            model_path = os.path.join(script_dir, '..', 'saved_models', 'model_trained.pth')
+            
             # Iterar sobre los pares de oraciones (entrada, salida)
             for input_indices, target_indices in index_data:
                 input_tensor = torch.tensor(input_indices, dtype=torch.long)
@@ -42,3 +41,16 @@ class Trainer:
             if total_loss == 0.0:
                 print("La pérdida alcanzó 0.0. Deteniendo el entrenamiento.")
                 break
+
+    # Parámetros de entrenamiento
+    vocab_size = 10000  
+    embedding_size = 200
+    hidden_size = 200
+    output_size = 10000  
+
+    # Crear modelo
+    model = WordProcessorModel(vocab_size, embedding_size, hidden_size, output_size)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    dataTrain = os.path.join(script_dir, '..','data', 'dataTrain.json')
+    index_data, _, _ = DataLoader.load_data(dataTrain)
+    train_model(model, index_data, output_size)
