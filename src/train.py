@@ -44,8 +44,10 @@ class Trainer:
                 
             print(f'Época {epoch + 1}/{num_epochs}, Pérdida: {total_loss / len(index_data)}')
             torch.save(model.state_dict(), modelPath)
-
+            
+            modelPath = os.path.join(os.path.dirname(modelPath), Trainer.model_path)
             # Verificar si la pérdida es igual a 0 y detener el entrenamiento
             if total_loss == 0.0:
                 print("La pérdida alcanzó 0.0. Deteniendo el entrenamiento.")
                 break
+    
