@@ -14,7 +14,6 @@ class Main:
         # Entrenar el modelo
         Trainer.train_model(self.model, self.index_data, Trainer.output_size)
 
-
 # Crear una instancia de Main y comenzar la aplicación
 start = Main()
 Translator.translate_sentence()

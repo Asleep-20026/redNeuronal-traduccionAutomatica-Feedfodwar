@@ -6,7 +6,6 @@ from model import WordProcessorModel
 from data_processing import DataLoader
 
 class Trainer:
-    
     # Parámetros de entrenamiento
     vocab_size = 10000  
     embedding_size = 200
@@ -21,10 +20,8 @@ class Trainer:
         
         # Verificar si hay una GPU disponible
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        
-        # Mover el modelo a la GPU si está disponible
+
         model = model.to(device)
-        # Definir función de pérdida y optimizador
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
         for epoch in range(num_epochs):
@@ -50,4 +47,3 @@ class Trainer:
             if total_loss == 0.0:
                 print("La pérdida alcanzó 0.0. Deteniendo el entrenamiento.")
                 break
-    
