@@ -4,17 +4,6 @@ from data_processing import DataLoader
 from train import *
 
 class Translator:
-    # Definir variables necesarias
-    vocab_size = 10000  
-    embedding_size = 200  #
-    hidden_size = 200  
-    output_size = 10000  
-
-    model = WordProcessorModel(vocab_size, embedding_size, hidden_size, output_size)
-    model.load_state_dict(torch.load(Trainer.model_path))
-    model.eval()
-
-    DataLoader.index_data, word_to_index_es, _ = DataLoader.load_data(Trainer.dataTrain)
 
     def translate_sentence(oracion, model, word_to_index_es):
         with torch.no_grad():
